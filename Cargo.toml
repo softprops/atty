@@ -10,4 +10,4 @@ keywords = ["terminal", "tty"]
 license = "MIT"
 
 [dependencies]
-libc = "0.1"
+libc = "0.2"
