@@ -1,6 +1,6 @@
 # atty
 
-[![Build Status](https://travis-ci.org/softprops/atty.svg?branch=master)](https://travis-ci.org/softprops/atty)
+[![Build Status](https://travis-ci.org/softprops/atty.svg?branch=master)](https://travis-ci.org/softprops/atty) [![Build status](https://ci.appveyor.com/api/projects/status/geggrsnsjsuse8cv?svg=true)](https://ci.appveyor.com/project/softprops/atty)
 
 > are you or are you not a tty?
 
