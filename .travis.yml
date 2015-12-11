@@ -5,11 +5,12 @@ matrix:
     - rust: nightly
     - rust: beta
     - rust: stable
+os:
+ - linux
+ - osx
 script:
   - cargo build
   - cargo test
-  - cargo bench
-  - cargo doc
 after_success: |
   [ $TRAVIS_RUST_VERSION = stable ] &&
   [ $TRAVIS_BRANCH = master ] &&
