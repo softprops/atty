@@ -29,14 +29,29 @@ pub fn is() -> bool {
 pub fn is() -> bool {
     extern crate kernel32;
     extern crate winapi;
-    unsafe {
-        let handle = kernel32::GetStdHandle(if fd == libc::STDOUT_FILENO {
-            winapi::winbase::STD_OUTPUT_HANDLE
-        } else {
-            winapi::winbase::STD_ERROR_HANDLE
-        });
+    use winapi::{self, HANDLE, INVALID_HANDLE_VALUE};
+    use std::ptr;
+    let handle: HANDLE = unsafe {
+        let name = b"CONOUT$\0";
+        let handle: HANDLE = unsafe {
+            kernel32::CreateFileA(
+                name.as_ptr() as *const i8,
+                winapi::GENERIC_READ | winapi::GENERIC_WRITE,
+                winapi::FILE_SHARE_WRITE,
+                ptr::null_mut(),
+                winapi::OPEN_EXISTING,
+                0,
+                ptr::null_mut(),
+            )
+        };
+        println!("handle {:?}", handle);
+        if handle == INVALID_HANDLE_VALUE {
+            println!("handle was invalid");
+            return false;
+        }
         let mut out = 0;
         kernel32::GetConsoleMode(handle, &mut out) != 0
+
     }
 }
 
