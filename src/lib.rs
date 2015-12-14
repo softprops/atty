@@ -45,7 +45,7 @@ pub fn is() -> bool {
         println!("handle was invalid");
     }
     let mut out = 0;
-    kernel32::GetConsoleMode(handle, &mut out) != 0
+    unsafe { kernel32::GetConsoleMode(handle, &mut out) != 0 }
 }
 
 /// returns true if this is _not_ a tty
