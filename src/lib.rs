@@ -29,7 +29,7 @@ pub fn is() -> bool {
 pub fn is() -> bool {
     extern crate kernel32;
     extern crate winapi;
-    use winapi::{self, HANDLE, INVALID_HANDLE_VALUE};
+    use self::winapi::{self, HANDLE, INVALID_HANDLE_VALUE};
     use std::ptr;
     let handle: HANDLE = unsafe {
         kernel32::CreateFileA(
