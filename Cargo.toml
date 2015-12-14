@@ -1,8 +1,8 @@
 [package]
 name = "atty"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["softprops <d.tangren@gmail.com>"]
-description = "A simple interface for querying atty."
+description = "A simple interface for querying atty"
 documentation = "http://softprops.github.io/atty"
 homepage = "https://github.com/softprops/atty"
 repository = "https://github.com/softprops/atty"
