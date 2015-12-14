@@ -29,9 +29,8 @@ pub fn is() -> bool {
 pub fn is() -> bool {
     extern crate kernel32;
     extern crate winapi;
-    use self::winapi::{self, HANDLE, INVALID_HANDLE_VALUE};
     use std::ptr;
-    let handle: HANDLE = unsafe {
+    let handle: winapi::HANDLE = unsafe {
         kernel32::CreateFileA(
             b"CONOUT$\0".as_ptr() as *const i8,
             winapi::GENERIC_READ | winapi::GENERIC_WRITE,
@@ -42,7 +41,7 @@ pub fn is() -> bool {
             ptr::null_mut(),
             )
     };
-    if handle == INVALID_HANDLE_VALUE {
+    if handle == winapi::INVALID_HANDLE_VALUE {
         println!("handle was invalid");
     }
     let mut out = 0;
