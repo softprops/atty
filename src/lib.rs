@@ -44,7 +44,7 @@ pub fn is(stream: Stream) -> bool {
     let handle = match stream {
         Stream::Stdout => winapi::winbase::STD_OUTPUT_HANDLE,
         Stream::Stderr => winapi::winbase::STD_ERROR_HANDLE,
-        Stream::Stdin => winapi::winbase::STD_IN_HANDLE
+        Stream::Stdin => winapi::winbase::STD_INPUT_HANDLE
     };
     unsafe {
         let handle = kernel32::GetStdHandle(handle);
