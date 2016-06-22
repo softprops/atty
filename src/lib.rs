@@ -4,59 +4,66 @@
 //! usage is just as simple
 //!
 //! ```
-//! if atty::is() {
+//! if atty::is(atty::Stream::Stdout) {
 //!   println!("i'm a tty")
 //! }
 //! ```
 //!
 //! ```
-//! if atty::isnt() {
+//! if atty::isnt(atty::Stream::Stdout) {
 //!   println!("i'm not a tty")
 //! }
 //! ```
 
 extern crate libc;
 
+/// possible stream sources
+pub enum Stream {
+    Stdout,
+    Stderr,
+    Stdin
+}
+
 /// returns true if this is a tty
 #[cfg(unix)]
-pub fn is() -> bool {
-    let r = unsafe { libc::isatty(libc::STDOUT_FILENO) };
-    r != 0
+pub fn is(stream: Stream) -> bool {
+    let fd = match stream {
+        Stream::Stdout => libc::STDOUT_FILENO,
+        Stream::Stderr => libc::STDERR_FILENO,
+        Stream::Stdin => libc::STDERR_FILENO
+    };
+    unsafe { libc::isatty(fd) != 0 }
 }
 
 /// returns true if this is a tty
 #[cfg(windows)]
-pub fn is() -> bool {
+pub fn is(stream: Stream) -> bool {
     extern crate kernel32;
     extern crate winapi;
-    use std::ptr;
-    let handle: winapi::HANDLE = unsafe {
-        kernel32::CreateFileA(b"CONOUT$\0".as_ptr() as *const i8,
-                              winapi::GENERIC_READ | winapi::GENERIC_WRITE,
-                              winapi::FILE_SHARE_WRITE,
-                              ptr::null_mut(),
-                              winapi::OPEN_EXISTING,
-                              0,
-                              ptr::null_mut())
+
+    let handle = match stream {
+        Stream::Stdout => winapi::winbase::STD_OUTPUT_HANDLE,
+        Stream::Stderr => winapi::winbase::STD_ERROR_HANDLE,
+        Stream::Stdin => winapi::winbase::STD_IN_HANDLE
     };
-    if handle == winapi::INVALID_HANDLE_VALUE {
-        return false;
+    unsafe {
+        let handle = kernel32::GetStdHandle(handle);
+        let mut out = 0;
+        kernel32::GetConsoleMode(handle, &mut out) != 0
     }
-    let mut out = 0;
-    unsafe { kernel32::GetConsoleMode(handle, &mut out) != 0 }
 }
 
 /// returns true if this is _not_ a tty
-pub fn isnt() -> bool {
-    !is()
+pub fn isnt(stream: Stream) -> bool {
+    !is(stream)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::is;
+    use super::{is, Stream};
 
     #[test]
     fn is_test() {
-        assert!(is())
+        assert!(is(Stream::Stdout))
     }
 }

@@ -1,3 +1,7 @@
+# 0.2.0 (unreleased)
+
+* support for various stream types
+
 # 0.1.2
 
 * windows support (with automated testing)
