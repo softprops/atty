@@ -49,6 +49,7 @@ pub fn is(stream: Stream) -> bool {
     unsafe {
         let handle = kernel32::GetStdHandle(handle);
         let mut out = 0;
+        println("{:#?}", kernel32::GetConsoleMode(handle, &mut out));
         kernel32::GetConsoleMode(handle, &mut out) != 0
     }
 }
