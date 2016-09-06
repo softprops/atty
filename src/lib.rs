@@ -30,7 +30,7 @@ pub fn is(stream: Stream) -> bool {
     let fd = match stream {
         Stream::Stdout => libc::STDOUT_FILENO,
         Stream::Stderr => libc::STDERR_FILENO,
-        Stream::Stdin => libc::STDERR_FILENO
+        Stream::Stdin => libc::STDIN_FILENO
     };
     unsafe { libc::isatty(fd) != 0 }
 }
