@@ -47,11 +47,7 @@ pub fn is(stream: Stream) -> bool {
         Stream::Stdin => winapi::winbase::STD_INPUT_HANDLE
     };
     unsafe {
-        let handle = kernel32::GetStdHandle(handle);
         let mut out = 0;
-        panic!("result {:#?} last err {:#?}",
-        kernel32::GetConsoleMode(handle, &mut out),
-    kernel32::GetLastError());
         kernel32::GetConsoleMode(handle, &mut out) != 0
     }
 }
