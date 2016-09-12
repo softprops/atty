@@ -1,6 +1,6 @@
 # atty
 
-[![Build Status](https://travis-ci.org/softprops/atty.svg?branch=master)](https://travis-ci.org/softprops/atty) [![Build status](https://ci.appveyor.com/api/projects/status/geggrsnsjsuse8cv?svg=true)](https://ci.appveyor.com/project/softprops/atty) [![Coverage Status](https://coveralls.io/repos/softprops/atty/badge.svg?branch=master&service=github)](https://coveralls.io/github/softprops/atty?branch=master)
+[![Build Status](https://travis-ci.org/softprops/atty.svg?branch=master)](https://travis-ci.org/softprops/atty) [![Build status](https://ci.appveyor.com/api/projects/status/geggrsnsjsuse8cv?svg=true)](https://ci.appveyor.com/project/softprops/atty) [![Coverage Status](https://coveralls.io/repos/softprops/atty/badge.svg?branch=master&service=github)](https://coveralls.io/github/softprops/atty?branch=master) [![crates.io](http://meritbadge.herokuapp.com/atty)](https://crates.io/crates/atty)
 
 > are you or are you not a tty?
 
