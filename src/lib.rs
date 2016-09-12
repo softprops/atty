@@ -41,12 +41,6 @@ pub fn is(stream: Stream) -> bool {
     extern crate kernel32;
     extern crate winapi;
 
-    let handle = match stream {
-        Stream::Stdout => winapi::STD_OUTPUT_HANDLE,
-        Stream::Stderr => winapi::STD_ERROR_HANDLE,
-        Stream::Stdin => winapi::STD_INPUT_HANDLE,
-    };
-
     unsafe {
         match stream {
             Stream::Stdin => {
@@ -54,7 +48,7 @@ pub fn is(stream: Stream) -> bool {
                 kernel32::GetConsoleMode(kernel32::GetStdHandle(winapi::STD_INPUT_HANDLE),
                                          &mut out) != 0
             }
-            out => {
+            _ => {
                 // note: there is no CONERR, only CONOUT
                 let handle = kernel32::CreateFileA(b"CONOUT$\0".as_ptr() as *const i8,
                                                    winapi::GENERIC_READ | winapi::GENERIC_WRITE,
@@ -65,13 +59,7 @@ pub fn is(stream: Stream) -> bool {
                                                    ::std::ptr::null_mut());
                 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms683171(v=vs.85).aspx
                 let mut buffer_info = ::std::mem::uninitialized();
-                let ret = kernel32::GetConsoleScreenBufferInfo(handle, &mut buffer_info);
-                let last_err = kernel32::GetLastError();
-                panic!("is invalid? {:#?}  result {:#?} last err {:#?}",
-                       winapi::INVALID_HANDLE_VALUE == handle,
-                       ret,
-                       last_err);
-                ret != 0
+                kernel32::GetConsoleScreenBufferInfo(handle, &mut buffer_info) != 0
             }
         }
 
