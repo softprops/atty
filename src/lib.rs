@@ -66,13 +66,13 @@ pub fn is(stream: Stream) -> bool {
                                                    ptr::null_mut(),
                                                    winapi::OPEN_EXISTING,
                                                    0,
-                                                   ptr::null_mut());
+                                                   ::std::ptr::null_mut());
                 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms683171(v=vs.85).aspx
                 let mut buffer_info = ::std::mem::uninitialized();
                 let ret = kernel32::GetConsoleScreenBufferInfo(handle, &mut buffer_info);
                 let last_err = kernel32::GetLastError();
                 panic!("is invalid? {:#?}  result {:#?} last err {:#?}",
-                       winapi::INVALID_HANDLE_VALUE == std_handle,
+                       winapi::INVALID_HANDLE_VALUE == handle,
                        ret,
                        last_err);
                 ret != 0
