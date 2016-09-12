@@ -50,7 +50,7 @@ pub fn is(stream: Stream) -> bool {
     unsafe {
         let handle = kernel32::GetStdHandle(handle);
         let mut out = 0;
-        panic!("is invalid? {:#?} result {:#?} last err {:#?}",
+        panic!("is invalid? {:#?}  result {:#?} last err {:#?}",
         winapi::INVALID_HANDLE_VALUE == handle,
         kernel32::GetConsoleMode(handle, &mut out),
         kernel32::GetLastError());
