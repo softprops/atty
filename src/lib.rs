@@ -55,7 +55,8 @@ pub fn is(stream: Stream) -> bool {
                 kernel32::GetConsoleMode(std_handle, &mut out) != 0
             },
             _ => {
-                let mut buffer_info = ::std::mem::zeroed();
+                // https://msdn.microsoft.com/en-us/library/windows/desktop/ms683171(v=vs.85).aspx
+                let mut buffer_info: winapi::PCONSOLE_SCREEN_BUFFER_INFO = ::std::mem::uninitialized();
                 let ret = kernel32::GetConsoleScreenBufferInfo(std_handle, &mut buffer_info);
                 let last_err = kernel32::GetLastError();
                 panic!("is invalid? {:#?}  result {:#?} last err {:#?}",
