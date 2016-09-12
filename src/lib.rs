@@ -55,12 +55,8 @@ pub fn is(stream: Stream) -> bool {
                                          &mut out) != 0
             }
             out => {
-                let name = match out {
-                    Stream::Stdout => b"CONOUT$\0",
-                    Stream::Stderr => b"CONERR$\0",
-                    _ => unreachable!(),
-                };
-                let handle = kernel32::CreateFileA(name.as_ptr() as *const i8,
+                // note: there is no CONERR, only CONOUT
+                let handle = kernel32::CreateFileA(b"CONOUT$\0".as_ptr() as *const i8,
                                                    winapi::GENERIC_READ | winapi::GENERIC_WRITE,
                                                    winapi::FILE_SHARE_WRITE,
                                                    ::std::ptr::null_mut(),
