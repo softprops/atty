@@ -68,13 +68,13 @@ mod tests {
     use super::{is, Stream};
 
     #[test]
-    fn is_out() {
-        assert!(is(Stream::Stdout))
+    fn is_err() {
+        assert!(is(Stream::Stderr))
     }
 
     #[test]
-    fn is_err() {
-        assert!(is(Stream::Stderr))
+    fn is_out() {
+        assert!(is(Stream::Stdout))
     }
 
     #[test]
