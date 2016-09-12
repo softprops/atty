@@ -52,19 +52,17 @@ pub fn is(stream: Stream) -> bool {
         match stream {
             Stream::Stdin => {
                 let mut out = 0;
-                panic!("is invalid? {:#?}  result {:#?} last err {:#?}",
-                winapi::INVALID_HANDLE_VALUE == std_handle,
-                kernel32::GetConsoleMode(std_handle, &mut out),
-                kernel32::GetLastError());
                 kernel32::GetConsoleMode(std_handle, &mut out) != 0
             },
             _ => {
-                let mut buffer_info = unsafe { ::std::mem::uninitialized() };
+                let mut buffer_info = ::std::mem::zeroed();
+                let ret = kernel32::GetConsoleScreenBufferInfo(std_handle, &mut buffer_info);
+                let last_err = kernel32::GetLastError();
                 panic!("is invalid? {:#?}  result {:#?} last err {:#?}",
                 winapi::INVALID_HANDLE_VALUE == std_handle,
-                kernel32::GetConsoleScreenBufferInfo(std_handle, &mut buffer_info),
-                kernel32::GetLastError());
-                kernel32::GetConsoleScreenBufferInfo(std_handle, &mut buffer_info) != 0
+                ret,
+                last_err);
+                ret != 0
             }
         }
 
