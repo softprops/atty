@@ -42,16 +42,18 @@ pub fn is(stream: Stream) -> bool {
     extern crate winapi;
 
     let handle = match stream {
-        Stream::Stdout => winapi::winbase::STD_OUTPUT_HANDLE,
-        Stream::Stderr => winapi::winbase::STD_ERROR_HANDLE,
-        Stream::Stdin => winapi::winbase::STD_INPUT_HANDLE
+        Stream::Stdout => winapi::STD_OUTPUT_HANDLE,
+        Stream::Stderr => winapi::STD_ERROR_HANDLE,
+        Stream::Stdin => winapi::STD_INPUT_HANDLE
     };
+
     unsafe {
         let handle = kernel32::GetStdHandle(handle);
         let mut out = 0;
-        panic!("result {:#?} last err {:#?}",
+        panic!("is invalid? {:#?} result {:#?} last err {:#?}",
+        winapi::INVALID_HANDLE_VALUE == handle,
         kernel32::GetConsoleMode(handle, &mut out),
-    kernel32::GetLastError());
+        kernel32::GetLastError());
         kernel32::GetConsoleMode(handle, &mut out) != 0
     }
 }
