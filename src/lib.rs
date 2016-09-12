@@ -77,11 +77,27 @@ mod tests {
     }
 
     #[test]
+    #[cfg(windows)]
+    fn is_out() {
+        // appveyor pipes its output
+        assert!(!is(Stream::Stdout))
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn is_in() {
+        // appveyor pipes its output
+        assert!(!is(Stream::Stdin))
+    }
+
+    #[test]
+    #[cfg(unix)]
     fn is_out() {
         assert!(is(Stream::Stdout))
     }
 
     #[test]
+    #[cfg(unix)]
     fn is_in() {
         assert!(is(Stream::Stdin))
     }
