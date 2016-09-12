@@ -1,3 +1,7 @@
+# 0.2.1
+
+* fix windows bug
+
 # 0.2.0
 
 * support for various stream types

@@ -42,21 +42,17 @@ pub fn is(stream: Stream) -> bool {
     extern crate winapi;
 
     unsafe {
+        let handle = kernel32::GetStdHandle(match stream {
+            Stream::Stdin => winapi::STD_INPUT_HANDLE,
+            Stream::Stderr => winapi::STD_ERROR_HANDLE,
+            Stream::Stdout => winapi::STD_OUTPUT_HANDLE,
+        });
         match stream {
             Stream::Stdin => {
                 let mut out = 0;
-                kernel32::GetConsoleMode(kernel32::GetStdHandle(winapi::STD_INPUT_HANDLE),
-                                         &mut out) != 0
+                kernel32::GetConsoleMode(handle, &mut out) != 0
             }
             _ => {
-                // note: there is no CONERR, only CONOUT
-                let handle = kernel32::CreateFileA(b"CONOUT$\0".as_ptr() as *const i8,
-                                                   winapi::GENERIC_READ | winapi::GENERIC_WRITE,
-                                                   winapi::FILE_SHARE_WRITE,
-                                                   ::std::ptr::null_mut(),
-                                                   winapi::OPEN_EXISTING,
-                                                   0,
-                                                   ::std::ptr::null_mut());
                 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms683171(v=vs.85).aspx
                 let mut buffer_info = ::std::mem::uninitialized();
                 kernel32::GetConsoleScreenBufferInfo(handle, &mut buffer_info) != 0
@@ -76,16 +72,33 @@ mod tests {
     use super::{is, Stream};
 
     #[test]
+    #[cfg(windows)]
     fn is_err() {
-        assert!(is(Stream::Stderr))
+        // appveyor pipes its output
+        assert!(!is(Stream::Stderr))
     }
 
     #[test]
+    #[cfg(windows)]
+    fn is_out() {
+        // appveyor pipes its output
+        assert!(!is(Stream::Stdout))
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn is_in() {
+        assert!(is(Stream::Stdin))
+    }
+
+    #[test]
+    #[cfg(unix)]
     fn is_out() {
         assert!(is(Stream::Stdout))
     }
 
     #[test]
+    #[cfg(unix)]
     fn is_in() {
         assert!(is(Stream::Stdin))
     }
