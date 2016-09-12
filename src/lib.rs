@@ -72,8 +72,10 @@ mod tests {
     use super::{is, Stream};
 
     #[test]
+    #[cfg(windows)]
     fn is_err() {
-        assert!(is(Stream::Stderr))
+        // appveyor pipes its output
+        assert!(!is(Stream::Stderr))
     }
 
     #[test]
@@ -86,8 +88,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn is_in() {
-        // appveyor pipes its output
-        assert!(!is(Stream::Stdin))
+        assert!(is(Stream::Stdin))
     }
 
     #[test]
