@@ -42,7 +42,7 @@ A simple example program is provided in this repo to test various tty's. By defa
 
 It prints
 
-```
+```bash
 $ cargo run --example atty
 stdout? true
 stderr? true
