@@ -63,7 +63,7 @@ pub fn is(stream: Stream) -> bool {
                 let handle = kernel32::CreateFileA(name.as_ptr() as *const i8,
                                                    winapi::GENERIC_READ | winapi::GENERIC_WRITE,
                                                    winapi::FILE_SHARE_WRITE,
-                                                   ptr::null_mut(),
+                                                   ::std::ptr::null_mut(),
                                                    winapi::OPEN_EXISTING,
                                                    0,
                                                    ::std::ptr::null_mut());
