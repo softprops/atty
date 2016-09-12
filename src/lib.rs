@@ -21,7 +21,7 @@ extern crate libc;
 pub enum Stream {
     Stdout,
     Stderr,
-    Stdin
+    Stdin,
 }
 
 /// returns true if this is a tty
@@ -30,7 +30,7 @@ pub fn is(stream: Stream) -> bool {
     let fd = match stream {
         Stream::Stdout => libc::STDOUT_FILENO,
         Stream::Stderr => libc::STDERR_FILENO,
-        Stream::Stdin => libc::STDIN_FILENO
+        Stream::Stdin => libc::STDIN_FILENO,
     };
     unsafe { libc::isatty(fd) != 0 }
 }
@@ -44,25 +44,37 @@ pub fn is(stream: Stream) -> bool {
     let handle = match stream {
         Stream::Stdout => winapi::STD_OUTPUT_HANDLE,
         Stream::Stderr => winapi::STD_ERROR_HANDLE,
-        Stream::Stdin => winapi::STD_INPUT_HANDLE
+        Stream::Stdin => winapi::STD_INPUT_HANDLE,
     };
 
     unsafe {
-        let std_handle = kernel32::GetStdHandle(handle);
         match stream {
             Stream::Stdin => {
                 let mut out = 0;
-                kernel32::GetConsoleMode(std_handle, &mut out) != 0
-            },
-            _ => {
+                kernel32::GetConsoleMode(kernel32::GetStdHandle(winapi::STD_INPUT_HANDLE),
+                                         &mut out) != 0
+            }
+            out => {
+                let name = match out {
+                    Stream::Stdout => b"CONOUT$\0",
+                    Stream::Stderr => b"CONERR$\0",
+                    _ => unreachable!(),
+                };
+                let handle = kernel32::CreateFileA(name.as_ptr() as *const i8,
+                                                   winapi::GENERIC_READ | winapi::GENERIC_WRITE,
+                                                   winapi::FILE_SHARE_WRITE,
+                                                   ptr::null_mut(),
+                                                   winapi::OPEN_EXISTING,
+                                                   0,
+                                                   ptr::null_mut());
                 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms683171(v=vs.85).aspx
-                let mut buffer_info: winapi::PCONSOLE_SCREEN_BUFFER_INFO = ::std::mem::uninitialized();
-                let ret = kernel32::GetConsoleScreenBufferInfo(std_handle, &mut buffer_info);
+                let mut buffer_info = ::std::mem::uninitialized();
+                let ret = kernel32::GetConsoleScreenBufferInfo(handle, &mut buffer_info);
                 let last_err = kernel32::GetLastError();
                 panic!("is invalid? {:#?}  result {:#?} last err {:#?}",
-                winapi::INVALID_HANDLE_VALUE == std_handle,
-                ret,
-                last_err);
+                       winapi::INVALID_HANDLE_VALUE == std_handle,
+                       ret,
+                       last_err);
                 ret != 0
             }
         }
