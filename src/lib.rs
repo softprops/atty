@@ -41,12 +41,12 @@ pub fn is(stream: Stream) -> bool {
     extern crate kernel32;
     extern crate winapi;
 
-    let handle = kernel32::GetStdHandle(match stream {
-        Stream::Stdin => winapi::STD_INPUT_HANDLE,
-        Stream::Stderr => winapi::STD_ERROR_HANDLE,
-        Stream::Stdout => winapi::STD_OUTPUT_HANDLE,
-    });
     unsafe {
+        let handle = kernel32::GetStdHandle(match stream {
+            Stream::Stdin => winapi::STD_INPUT_HANDLE,
+            Stream::Stderr => winapi::STD_ERROR_HANDLE,
+            Stream::Stdout => winapi::STD_OUTPUT_HANDLE,
+        });
         match stream {
             Stream::Stdin => {
                 let mut out = 0;
