@@ -15,8 +15,6 @@
 //! }
 //! ```
 
-extern crate libc;
-
 /// possible stream sources
 pub enum Stream {
     Stdout,
@@ -27,6 +25,8 @@ pub enum Stream {
 /// returns true if this is a tty
 #[cfg(unix)]
 pub fn is(stream: Stream) -> bool {
+    extern crate libc;
+
     let fd = match stream {
         Stream::Stdout => libc::STDOUT_FILENO,
         Stream::Stderr => libc::STDERR_FILENO,
