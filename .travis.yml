@@ -6,6 +6,7 @@ matrix:
     - rust: nightly
     - rust: beta
     - rust: stable
+    - rust: 1.8.0
 os:
  - linux
  - osx
