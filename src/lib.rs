@@ -15,8 +15,6 @@
 //! }
 //! ```
 
-extern crate libc;
-
 /// possible stream sources
 pub enum Stream {
     Stdout,
@@ -27,6 +25,8 @@ pub enum Stream {
 /// returns true if this is a tty
 #[cfg(unix)]
 pub fn is(stream: Stream) -> bool {
+    extern crate libc;
+
     let fd = match stream {
         Stream::Stdout => libc::STDOUT_FILENO,
         Stream::Stderr => libc::STDERR_FILENO,
@@ -93,12 +93,25 @@ mod tests {
 
     #[test]
     #[cfg(unix)]
+    fn is_err() {
+        assert!(is(Stream::Stderr))
+    }
+
+    #[test]
+    #[cfg(unix)]
     fn is_out() {
         assert!(is(Stream::Stdout))
     }
 
     #[test]
-    #[cfg(unix)]
+    #[cfg(target_os = "macos")]
+    fn is_in() {
+        // macos on travis seems to pipe its input
+        assert!(!is(Stream::Stdin))
+    }
+
+    #[test]
+    #[cfg(all(not(target_os = "macos"), unix))]
     fn is_in() {
         assert!(is(Stream::Stdin))
     }
