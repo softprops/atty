@@ -4,9 +4,8 @@
 
 > are you or are you not a tty?
 
-## docs
 
-Find them [here](http://softprops.github.io/atty)
+[Api documentation](http://softprops.github.io/atty)
 
 ## usage
 
@@ -30,7 +29,7 @@ Add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-atty = "0.1"
+atty = "0.2"
 ```
 
 ## testing

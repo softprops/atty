@@ -1,3 +1,8 @@
+# 0.2.2
+
+* use target specific dependencies [#11](https://github.com/softprops/atty/pull/11)
+* Add tty detection for MSYS terminals [#12](https://github.com/softprops/atty/pull/12)
+
 # 0.2.1
 
 * fix windows bug
