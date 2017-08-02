@@ -15,6 +15,8 @@
 //! }
 //! ```
 
+#![cfg_attr(not(windows), no_std)]
+
 #[cfg(windows)]
 extern crate kernel32;
 #[cfg(not(windows))]
