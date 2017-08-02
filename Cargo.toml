@@ -10,7 +10,7 @@ keywords = ["terminal", "tty"]
 license = "MIT"
 
 [target.'cfg(not(windows))'.dependencies]
-libc = "0.2"
+libc = { version = "0.2", default-features = false }
 
 [target.'cfg(windows)'.dependencies]
 kernel32-sys = "0.2"
