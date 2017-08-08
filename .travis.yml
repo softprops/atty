@@ -4,11 +4,14 @@ matrix:
   fast_finish: true
   include:
     - rust: nightly
+    - rust: nightly
+      os: osx
     - rust: beta
+    - rust: beta
+      os: osx
     - rust: stable
-os:
- - linux
- - osx
+    - rust: stable
+      os: osx
 script:
   - cargo build
   - cargo test
