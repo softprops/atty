@@ -15,14 +15,16 @@
 //! }
 //! ```
 
-#![cfg_attr(not(windows), no_std)]
+#![cfg_attr(unix, no_std)]
 
 #[cfg(windows)]
 extern crate kernel32;
-#[cfg(not(windows))]
+#[cfg(unix)]
 extern crate libc;
 #[cfg(windows)]
 extern crate winapi;
+#[cfg(target_os = "redox")]
+extern crate termion;
 
 #[cfg(windows)]
 use winapi::minwindef::DWORD;
@@ -132,6 +134,19 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
     let name = OsString::from_wide(name_u16)
         .as_os_str().to_string_lossy().into_owned();
     name.contains("msys-") || name.contains("-pty")
+}
+
+/// returns true if this is a tty
+#[cfg(target_os = "redox")]
+pub fn is(stream: Stream) -> bool {
+    use std::io;
+    use termion::is_tty;
+
+    match stream {
+        Stream::Stdin => is_tty(&io::stdin()),
+        Stream::Stdout => is_tty(&io::stdout()),
+        Stream::Stderr => is_tty(&io::stderr())
+    }
 }
 
 #[cfg(test)]

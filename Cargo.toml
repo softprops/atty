@@ -9,9 +9,12 @@ repository = "https://github.com/softprops/atty"
 keywords = ["terminal", "tty"]
 license = "MIT"
 
-[target.'cfg(not(windows))'.dependencies]
+[target.'cfg(unix)'.dependencies]
 libc = { version = "0.2", default-features = false }
 
 [target.'cfg(windows)'.dependencies]
 kernel32-sys = "0.2"
 winapi = "0.2"
+
+[target.'cfg(target_os = "redox")'.dependencies]
+termion = "1.5"
