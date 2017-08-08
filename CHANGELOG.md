@@ -1,3 +1,7 @@
+# 0.2.3
+
+* added support for Redox OS [#14](https://github.com/softprops/atty/pull/14)
+
 # 0.2.2
 
 * use target specific dependencies [#11](https://github.com/softprops/atty/pull/11)
