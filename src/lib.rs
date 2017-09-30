@@ -53,11 +53,8 @@ pub fn is(stream: Stream) -> bool {
 /// returns true if this is a tty
 #[cfg(windows)]
 pub fn is(stream: Stream) -> bool {
-    use winapi::{
-        STD_INPUT_HANDLE as STD_INPUT,
-        STD_ERROR_HANDLE as STD_ERROR,
-        STD_OUTPUT_HANDLE as STD_OUTPUT
-    };
+    use winapi::{STD_ERROR_HANDLE as STD_ERROR, STD_INPUT_HANDLE as STD_INPUT,
+                 STD_OUTPUT_HANDLE as STD_OUTPUT};
 
     let (fd, others) = match stream {
         Stream::Stdin => (STD_INPUT, [STD_ERROR, STD_OUTPUT]),
@@ -121,18 +118,23 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
         kernel32::GetStdHandle(fd),
         FileNameInfo,
         &mut *name_info_bytes as *mut _ as *mut c_void,
-        name_info_bytes.len() as u32);
+        name_info_bytes.len() as u32,
+    );
     if res == 0 {
         return true;
     }
-    let name_info: FILE_NAME_INFO =
-        *(name_info_bytes[0..size].as_ptr() as *const FILE_NAME_INFO);
+    let name_info: FILE_NAME_INFO = *(name_info_bytes[0..size].as_ptr() as
+                                          *const FILE_NAME_INFO);
     let name_bytes =
         &name_info_bytes[size..size + name_info.FileNameLength as usize];
     let name_u16 = slice::from_raw_parts(
-        name_bytes.as_ptr() as *const u16, name_bytes.len() / 2);
+        name_bytes.as_ptr() as *const u16,
+        name_bytes.len() / 2,
+    );
     let name = OsString::from_wide(name_u16)
-        .as_os_str().to_string_lossy().into_owned();
+        .as_os_str()
+        .to_string_lossy()
+        .into_owned();
     name.contains("msys-") || name.contains("-pty")
 }
 
@@ -145,13 +147,13 @@ pub fn is(stream: Stream) -> bool {
     match stream {
         Stream::Stdin => is_tty(&io::stdin()),
         Stream::Stdout => is_tty(&io::stdout()),
-        Stream::Stderr => is_tty(&io::stderr())
+        Stream::Stderr => is_tty(&io::stderr()),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{is, Stream};
+    use super::{Stream, is};
 
     #[test]
     #[cfg(windows)]
@@ -189,7 +191,7 @@ mod tests {
     #[cfg(target_os = "macos")]
     fn is_in() {
         // macos on travis seems to pipe its input
-        assert!(!is(Stream::Stdin))
+        assert!(is(Stream::Stdin))
     }
 
     #[test]
