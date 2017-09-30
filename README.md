@@ -5,7 +5,16 @@
 > are you or are you not a tty?
 
 
-[Api documentation](http://softprops.github.io/atty)
+[Documentation](http://softprops.github.io/atty)
+
+## install
+
+Add the following to your `Cargo.toml`
+
+```toml
+[dependencies]
+atty = "0.2"
+```
 
 ## usage
 
@@ -21,15 +30,6 @@ fn main() {
     println!("I'm not");
   }
 }
-```
-
-## install
-
-Add the following to your `Cargo.toml`
-
-```toml
-[dependencies]
-atty = "0.2"
 ```
 
 ## testing
@@ -75,4 +75,4 @@ stderr? false
 stdin? true
 ```
 
-Doug Tangren (softprops) 2015
+Doug Tangren (softprops) 2015-2017
