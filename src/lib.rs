@@ -17,8 +17,6 @@
 
 #![cfg_attr(unix, no_std)]
 
-#[cfg(windows)]
-extern crate kernel32;
 #[cfg(unix)]
 extern crate libc;
 #[cfg(windows)]
@@ -27,7 +25,7 @@ extern crate winapi;
 extern crate termion;
 
 #[cfg(windows)]
-use winapi::minwindef::DWORD;
+use winapi::shared::minwindef::DWORD;
 
 /// possible stream sources
 #[derive(Clone, Copy, Debug)]
@@ -53,7 +51,7 @@ pub fn is(stream: Stream) -> bool {
 /// returns true if this is a tty
 #[cfg(windows)]
 pub fn is(stream: Stream) -> bool {
-    use winapi::{STD_ERROR_HANDLE as STD_ERROR, STD_INPUT_HANDLE as STD_INPUT,
+    use winapi::um::winbase::{STD_ERROR_HANDLE as STD_ERROR, STD_INPUT_HANDLE as STD_INPUT,
                  STD_OUTPUT_HANDLE as STD_OUTPUT};
 
     let (fd, others) = match stream {
@@ -88,10 +86,13 @@ pub fn isnt(stream: Stream) -> bool {
 /// Returns true if any of the given fds are on a console.
 #[cfg(windows)]
 unsafe fn console_on_any(fds: &[DWORD]) -> bool {
+    use winapi::um::consoleapi::GetConsoleMode;
+    use winapi::um::processenv::GetStdHandle;
+
     for &fd in fds {
         let mut out = 0;
-        let handle = kernel32::GetStdHandle(fd);
-        if kernel32::GetConsoleMode(handle, &mut out) != 0 {
+        let handle = GetStdHandle(fd);
+        if GetConsoleMode(handle, &mut out) != 0 {
             return true;
         }
     }
@@ -103,19 +104,20 @@ unsafe fn console_on_any(fds: &[DWORD]) -> bool {
 unsafe fn msys_tty_on(fd: DWORD) -> bool {
     use std::ffi::OsString;
     use std::mem;
-    use std::os::raw::c_void;
     use std::os::windows::ffi::OsStringExt;
     use std::slice;
 
-    use kernel32::GetFileInformationByHandleEx;
-    use winapi::fileapi::FILE_NAME_INFO;
-    use winapi::minwinbase::FileNameInfo;
-    use winapi::minwindef::MAX_PATH;
+    use winapi::ctypes::c_void;
+    use winapi::um::winbase::GetFileInformationByHandleEx;
+    use winapi::um::fileapi::FILE_NAME_INFO;
+    use winapi::um::minwinbase::FileNameInfo;
+    use winapi::um::processenv::GetStdHandle;
+    use winapi::shared::minwindef::MAX_PATH;
 
     let size = mem::size_of::<FILE_NAME_INFO>();
     let mut name_info_bytes = vec![0u8; size + MAX_PATH];
     let res = GetFileInformationByHandleEx(
-        kernel32::GetStdHandle(fd),
+        GetStdHandle(fd),
         FileNameInfo,
         &mut *name_info_bytes as *mut _ as *mut c_void,
         name_info_bytes.len() as u32,
