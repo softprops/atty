@@ -1,6 +1,6 @@
 [package]
 name = "atty"
-version = "0.2.4"
+version = "0.2.5"
 authors = ["softprops <d.tangren@gmail.com>"]
 description = "A simple interface for querying atty"
 documentation = "http://softprops.github.io/atty"
@@ -16,9 +16,9 @@ travis-ci = { repository = "softprops/atty" }
 [target.'cfg(unix)'.dependencies]
 libc = { version = "0.2", default-features = false }
 
-[target.'cfg(windows)'.dependencies]
-kernel32-sys = "0.2"
-winapi = "0.2"
+[target.'cfg(windows)'.dependencies.winapi]
+version = "0.3"
+features = ["consoleapi", "processenv", "minwinbase", "minwindef", "winbase"]
 
 [target.'cfg(target_os = "redox")'.dependencies]
 termion = "1.5"
