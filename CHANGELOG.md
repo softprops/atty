@@ -1,3 +1,7 @@
+# 0.2.4
+
+* added support for Wasm compile targets [#17](https://github.com/softprops/atty/pull/17)
+
 # 0.2.3
 
 * added support for Redox OS [#14](https://github.com/softprops/atty/pull/14)
