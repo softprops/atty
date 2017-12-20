@@ -151,6 +151,12 @@ pub fn is(stream: Stream) -> bool {
     }
 }
 
+/// returns true if this is a tty
+#[cfg(target_arch = "wasm32")]
+pub fn is(_stream: Stream) -> bool {
+    false
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Stream, is};
