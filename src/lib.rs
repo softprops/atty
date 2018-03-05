@@ -137,7 +137,7 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
         .as_os_str()
         .to_string_lossy()
         .into_owned();
-    name.contains("msys-") || name.contains("-pty")
+    name.contains("msys-") && name.contains("-pty")
 }
 
 /// returns true if this is a tty
