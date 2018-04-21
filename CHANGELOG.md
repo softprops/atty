@@ -1,3 +1,7 @@
+# 0.2.9
+
+* Fix fix pty detection [#25](https://github.com/softprops/atty/pull/25)
+
 # 0.2.8
 
 * Fix an inverted condition on MinGW [#22](https://github.com/softprops/atty/pull/22)
