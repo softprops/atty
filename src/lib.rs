@@ -137,7 +137,13 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
         .as_os_str()
         .to_string_lossy()
         .into_owned();
-    name.contains("msys-") && name.contains("-pty")
+    // This checks whether 'pty' exists in the file name, which indicates that
+    // a pseudo-terminal is attached. To mitigate against false positives
+    // (e.g., an actual file name that contains 'pty'), we also require that
+    // either the strings 'msys-' or 'cygwin-' are in the file name as well.)
+    let is_msys = name.contains("msys-") || name.contains("cygwin-");
+    let is_pty = name.contains("-pty");
+    is_msys && is_pty
 }
 
 /// returns true if this is a tty
