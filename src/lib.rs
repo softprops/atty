@@ -36,7 +36,7 @@ pub enum Stream {
 }
 
 /// returns true if this is a tty
-#[cfg(unix)]
+#[cfg(all(unix, not(target_arch = "wasm32")))]
 pub fn is(stream: Stream) -> bool {
     extern crate libc;
 
