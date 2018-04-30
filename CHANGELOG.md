@@ -1,3 +1,7 @@
+# 0.2.10
+
+* fix wasm regression [#27](https://github.com/softprops/atty/pull/27)
+
 # 0.2.9
 
 * Fix fix pty detection [#25](https://github.com/softprops/atty/pull/25)
