@@ -1,3 +1,7 @@
+# 0.2.11
+
+* fix msys detection with `winapi@0.3.5` [#28](https://github.com/softprops/atty/pull/28)
+
 # 0.2.10
 
 * fix wasm regression [#27](https://github.com/softprops/atty/pull/27)
