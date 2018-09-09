@@ -6,7 +6,7 @@ description = "A simple interface for querying atty"
 documentation = "http://softprops.github.io/atty"
 homepage = "https://github.com/softprops/atty"
 repository = "https://github.com/softprops/atty"
-keywords = ["terminal", "tty"]
+keywords = ["terminal", "tty", "isatty"]
 license = "MIT"
 readme = "README.md"
 
