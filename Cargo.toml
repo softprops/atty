@@ -9,6 +9,7 @@ repository = "https://github.com/softprops/atty"
 keywords = ["terminal", "tty", "isatty"]
 license = "MIT"
 readme = "README.md"
+exclude = ["/.travis.yml", "/appveyor.yml"]
 
 [badges]
 travis-ci = { repository = "softprops/atty" }
