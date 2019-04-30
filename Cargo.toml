@@ -23,3 +23,6 @@ features = ["consoleapi", "processenv", "minwinbase", "minwindef", "winbase"]
 
 [target.'cfg(target_os = "redox")'.dependencies]
 termion = "1.5"
+
+[dev-dependencies]
+doc-comment = "0.3"
