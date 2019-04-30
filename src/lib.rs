@@ -23,6 +23,12 @@ extern crate libc;
 extern crate winapi;
 #[cfg(target_os = "redox")]
 extern crate termion;
+#[cfg(test)]
+#[macro_use]
+extern crate doc_comment;
+
+#[cfg(test)]
+doctest!("../README.md");
 
 #[cfg(windows)]
 use winapi::shared::minwindef::DWORD;
