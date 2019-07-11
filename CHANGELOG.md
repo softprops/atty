@@ -1,3 +1,7 @@
+# 0.2.12
+
+* Redox is now in the unix family so redox cfg is no longer needed [#35](https://github.com/softprops/atty/pull/35)
+
 # 0.2.11
 
 * fix msys detection with `winapi@0.3.5` [#28](https://github.com/softprops/atty/pull/28)
