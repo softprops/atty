@@ -21,8 +21,6 @@
 extern crate libc;
 #[cfg(windows)]
 extern crate winapi;
-#[cfg(target_os = "redox")]
-extern crate termion;
 
 #[cfg(windows)]
 use winapi::shared::minwindef::DWORD;
@@ -138,19 +136,6 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
     let is_msys = name.contains("msys-") || name.contains("cygwin-");
     let is_pty = name.contains("-pty");
     is_msys && is_pty
-}
-
-/// returns true if this is a tty
-#[cfg(target_os = "redox")]
-pub fn is(stream: Stream) -> bool {
-    use std::io;
-    use termion::is_tty;
-
-    match stream {
-        Stream::Stdin => is_tty(&io::stdin()),
-        Stream::Stdout => is_tty(&io::stdout()),
-        Stream::Stderr => is_tty(&io::stderr()),
-    }
 }
 
 /// returns true if this is a tty

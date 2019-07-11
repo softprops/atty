@@ -21,5 +21,3 @@ libc = { version = "0.2", default-features = false }
 version = "0.3"
 features = ["consoleapi", "processenv", "minwinbase", "minwindef", "winbase"]
 
-[target.'cfg(target_os = "redox")'.dependencies]
-termion = "1.5"
