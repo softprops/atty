@@ -1,5 +1,3 @@
-extern crate atty;
-
 use atty::{is, Stream};
 
 fn main() {
