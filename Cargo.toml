@@ -10,7 +10,6 @@ keywords = ["terminal", "tty", "isatty"]
 license = "MIT"
 readme = "README.md"
 exclude = ["/.travis.yml", "/appveyor.yml"]
-edition = "2018"
 
 [badges]
 travis-ci = { repository = "softprops/atty" }
