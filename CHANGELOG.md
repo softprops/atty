@@ -1,3 +1,7 @@
+# 0.2.13
+
+* support older versions of rust that do now support 2018 edition
+
 # 0.2.12
 
 * Redox is now in the unix family so redox cfg is no longer needed [#35](https://github.com/softprops/atty/pull/35)
