@@ -17,6 +17,11 @@
 
 #![cfg_attr(unix, no_std)]
 
+#[cfg(unix)]
+extern crate libc;
+#[cfg(windows)]
+extern crate winapi;
+
 #[cfg(windows)]
 use winapi::shared::minwindef::DWORD;
 #[cfg(windows)]

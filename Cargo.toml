@@ -1,6 +1,6 @@
 [package]
 name = "atty"
-version = "0.2.12"
+version = "0.2.13"
 authors = ["softprops <d.tangren@gmail.com>"]
 description = "A simple interface for querying atty"
 documentation = "http://softprops.github.io/atty"
@@ -10,7 +10,6 @@ keywords = ["terminal", "tty", "isatty"]
 license = "MIT"
 readme = "README.md"
 exclude = ["/.travis.yml", "/appveyor.yml"]
-edition = "2018"
 
 [badges]
 travis-ci = { repository = "softprops/atty" }
