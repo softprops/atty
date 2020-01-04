@@ -49,6 +49,19 @@ pub fn is(stream: Stream) -> bool {
 }
 
 /// returns true if this is a tty
+#[cfg(target_os = "hermit")]
+pub fn is(stream: Stream) -> bool {
+    extern crate hermit_abi;
+
+    let fd = match stream {
+        Stream::Stdout => hermit_abi::STDOUT_FILENO,
+        Stream::Stderr => hermit_abi::STDERR_FILENO,
+        Stream::Stdin => hermit_abi::STDIN_FILENO,
+    };
+    hermit_abi::isatty(fd)
+}
+
+/// returns true if this is a tty
 #[cfg(windows)]
 pub fn is(stream: Stream) -> bool {
     use winapi::um::winbase::{
