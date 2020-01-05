@@ -1,3 +1,7 @@
+# 0.2.14
+
+* add support for [RustyHermit](https://github.com/hermitcore/libhermit-rs), a Rust-based unikernel [#41](https://github.com/softprops/atty/pull/41)
+
 # 0.2.13
 
 * support older versions of rust that do now support 2018 edition
