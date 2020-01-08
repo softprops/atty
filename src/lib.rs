@@ -15,7 +15,7 @@
 //! }
 //! ```
 
-#![cfg_attr(unix, no_std)]
+#![cfg_attr(not(windows), no_std)]
 
 #[cfg(unix)]
 extern crate libc;
@@ -154,7 +154,11 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
 }
 
 /// returns true if this is a tty
-#[cfg(target_arch = "wasm32")]
+// This list should have one entry for every platform-specific `is` fn defined above.
+#[cfg(all(
+    not(all(unix, not(target_arch = "wasm32"))),
+    not(windows),
+))]
 pub fn is(_stream: Stream) -> bool {
     false
 }
