@@ -61,6 +61,12 @@ pub fn is(stream: Stream) -> bool {
     hermit_abi::isatty(fd)
 }
 
+/// always returns false
+#[cfg(target_env = "sgx")]
+pub fn is(_stream: Stream) -> bool {
+    false
+}
+
 /// returns true if this is a tty
 #[cfg(windows)]
 pub fn is(stream: Stream) -> bool {
