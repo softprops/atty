@@ -61,12 +61,6 @@ pub fn is(stream: Stream) -> bool {
     hermit_abi::isatty(fd)
 }
 
-/// always returns false
-#[cfg(target_env = "sgx")]
-pub fn is(_stream: Stream) -> bool {
-    false
-}
-
 /// returns true if this is a tty
 #[cfg(windows)]
 pub fn is(stream: Stream) -> bool {
@@ -161,6 +155,12 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
 
 /// returns true if this is a tty
 #[cfg(target_arch = "wasm32")]
+pub fn is(_stream: Stream) -> bool {
+    false
+}
+
+/// returns true if this is a tty
+#[cfg(all(target_env = "sgx", target_vendor = "fortanix"))]
 pub fn is(_stream: Stream) -> bool {
     false
 }
