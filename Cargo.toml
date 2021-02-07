@@ -24,3 +24,9 @@ hermit-abi = "0.1.6"
 version = "0.3"
 features = ["consoleapi", "processenv", "minwinbase", "minwindef", "winbase"]
 
+[dependencies]
+core = { version = "1.0.0", optional = true, package = 'rustc-std-workspace-core' }
+compiler_builtins = { version = '0.1.2', optional = true }
+
+[features]
+rustc-dep-of-std = ['core', 'compiler_builtins']
