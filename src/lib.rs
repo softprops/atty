@@ -15,8 +15,6 @@
 //! }
 //! ```
 
-#![cfg_attr(unix, no_std)]
-
 #[cfg(unix)]
 extern crate libc;
 #[cfg(windows)]
@@ -35,6 +33,10 @@ pub enum Stream {
     Stdin,
 }
 
+pub trait IsATTY {
+    fn isatty(&self) -> bool;
+}
+
 /// returns true if this is a tty
 #[cfg(all(unix, not(target_arch = "wasm32")))]
 pub fn is(stream: Stream) -> bool {
@@ -48,6 +50,14 @@ pub fn is(stream: Stream) -> bool {
     unsafe { libc::isatty(fd) != 0 }
 }
 
+#[cfg(all(unix, not(target_arch = "wasm32")))]
+impl<T:std::os::unix::io::AsRawFd> IsATTY for T {
+    fn isatty(&self) -> bool {
+        extern crate libc;
+        unsafe { libc::isatty(self.as_raw_fd()) != 0}
+    }
+}
+
 /// returns true if this is a tty
 #[cfg(target_os = "hermit")]
 pub fn is(stream: Stream) -> bool {
@@ -59,6 +69,14 @@ pub fn is(stream: Stream) -> bool {
         Stream::Stdin => hermit_abi::STDIN_FILENO,
     };
     hermit_abi::isatty(fd)
+}
+
+#[cfg(target_os = "hermit")]
+impl<T:std::os::unix::io::AsRawFd> IsATTY for T {
+    fn isatty(&self) -> bool {
+        extern crate hermit_abi;
+        hermit_abi::isatty(self.as_raw_fd())
+    }
 }
 
 /// returns true if this is a tty
@@ -157,6 +175,13 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
 #[cfg(target_arch = "wasm32")]
 pub fn is(_stream: Stream) -> bool {
     false
+}
+
+#[cfg(target_arch = "wasm32")]
+impl<T:std::os::unix::io::AsRawFd> IsATTY for T {
+    fn isatty(&self) -> bool {
+        false
+    }
 }
 
 #[cfg(test)]
