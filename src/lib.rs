@@ -23,9 +23,9 @@ extern crate winapi;
 #[cfg(windows)]
 use winapi::shared::ntdef::WCHAR;
 #[cfg(windows)]
-use winapi::um::winnt::HANDLE;
+use winapi::um::winbase::{STD_ERROR_HANDLE, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE};
 #[cfg(windows)]
-use winapi::um::winbase::{STD_ERROR_HANDLE,STD_INPUT_HANDLE,STD_OUTPUT_HANDLE};
+use winapi::um::winnt::HANDLE;
 
 /// possible stream sources
 #[derive(Clone, Copy, Debug)]
@@ -54,10 +54,10 @@ pub fn is(stream: Stream) -> bool {
 }
 
 #[cfg(all(unix, not(target_arch = "wasm32")))]
-impl<T:std::os::unix::io::AsRawFd> IsATTY<std::os::unix::io::RawFd> for T {
+impl<T: std::os::unix::io::AsRawFd> IsATTY<std::os::unix::io::RawFd> for T {
     fn isatty(&self) -> bool {
         extern crate libc;
-        unsafe { libc::isatty(self.as_raw_fd()) != 0}
+        unsafe { libc::isatty(self.as_raw_fd()) != 0 }
     }
 }
 
@@ -75,7 +75,7 @@ pub fn is(stream: Stream) -> bool {
 }
 
 #[cfg(target_os = "hermit")]
-impl<T:std::os::unix::io::AsRawFd> IsATTY<std::os::unix::io::RawFd> for T {
+impl<T: std::os::unix::io::AsRawFd> IsATTY<std::os::unix::io::RawFd> for T {
     fn isatty(&self) -> bool {
         extern crate hermit_abi;
         hermit_abi::isatty(self.as_raw_fd())
@@ -86,26 +86,26 @@ impl<T:std::os::unix::io::AsRawFd> IsATTY<std::os::unix::io::RawFd> for T {
 #[cfg(windows)]
 pub fn is(stream: Stream) -> bool {
     use winapi::um::processenv::GetStdHandle;
-    let stdin = unsafe {GetStdHandle(STD_INPUT_HANDLE)};
-    let stdout = unsafe {GetStdHandle(STD_OUTPUT_HANDLE)};
-    let stderr = unsafe {GetStdHandle(STD_ERROR_HANDLE)};
+    let stdin = unsafe { GetStdHandle(STD_INPUT_HANDLE) };
+    let stdout = unsafe { GetStdHandle(STD_OUTPUT_HANDLE) };
+    let stderr = unsafe { GetStdHandle(STD_ERROR_HANDLE) };
     let (handle, others) = match stream {
         Stream::Stdin => (stdin, [stderr, stdout]),
         Stream::Stderr => (stderr, [stdin, stdout]),
         Stream::Stdout => (stdout, [stdin, stderr]),
     };
-    
+
     is_handle_a_tty(&handle, &others)
 }
 
 #[cfg(windows)]
-impl<T:std::os::windows::io::AsRawHandle> IsATTY<std::os::windows::io::RawHandle> for T {
+impl<T: std::os::windows::io::AsRawHandle> IsATTY<std::os::windows::io::RawHandle> for T {
     fn isatty(&self) -> bool {
         use winapi::um::processenv::GetStdHandle;
         let handle = self.as_raw_handle() as HANDLE;
-        let stdin = unsafe {GetStdHandle(STD_INPUT_HANDLE)};
-        let stdout = unsafe {GetStdHandle(STD_OUTPUT_HANDLE)};
-        let stderr = unsafe {GetStdHandle(STD_ERROR_HANDLE)};
+        let stdin = unsafe { GetStdHandle(STD_INPUT_HANDLE) };
+        let stdout = unsafe { GetStdHandle(STD_OUTPUT_HANDLE) };
+        let stderr = unsafe { GetStdHandle(STD_ERROR_HANDLE) };
         let others = [stdin, stdout, stderr];
 
         is_handle_a_tty(&handle, &others)
@@ -113,7 +113,7 @@ impl<T:std::os::windows::io::AsRawHandle> IsATTY<std::os::windows::io::RawHandle
 }
 
 #[cfg(windows)]
-impl<T:std::os::windows::io::AsRawSocket> IsATTY<std::os::windows::io::RawSocket> for T {
+impl<T: std::os::windows::io::AsRawSocket> IsATTY<std::os::windows::io::RawSocket> for T {
     fn isatty(&self) -> bool {
         false
     }
@@ -150,7 +150,7 @@ pub fn isnt(stream: Stream) -> bool {
 /// Returns true if any of the given fds are on a console.
 #[cfg(windows)]
 unsafe fn console_on(handle: &HANDLE) -> bool {
-    use winapi::um::{consoleapi::GetConsoleMode};
+    use winapi::um::consoleapi::GetConsoleMode;
 
     let mut out = 0;
     if GetConsoleMode(*handle, &mut out) != 0 {
@@ -206,7 +206,7 @@ pub fn is(_stream: Stream) -> bool {
 }
 
 #[cfg(target_arch = "wasm32")]
-impl<T:std::os::unix::io::AsRawFd> IsATTY for T {
+impl<T: std::os::unix::io::AsRawFd> IsATTY for T {
     fn isatty(&self) -> bool {
         false
     }
@@ -214,7 +214,7 @@ impl<T:std::os::unix::io::AsRawFd> IsATTY for T {
 
 #[cfg(test)]
 mod tests {
-    use super::{is, Stream, IsATTY};
+    use super::{is, IsATTY, Stream};
 
     #[test]
     #[cfg(windows)]
