@@ -36,7 +36,7 @@ pub enum Stream {
     Stdin,
 }
 
-pub trait IsATTY {
+pub trait IsATTY<T> {
     fn isatty(&self) -> bool;
 }
 
@@ -54,7 +54,7 @@ pub fn is(stream: Stream) -> bool {
 }
 
 #[cfg(all(unix, not(target_arch = "wasm32")))]
-impl<T:std::os::unix::io::AsRawFd> IsATTY for T {
+impl<T:std::os::unix::io::AsRawFd> IsATTY<std::os::unix::io::RawFd> for T {
     fn isatty(&self) -> bool {
         extern crate libc;
         unsafe { libc::isatty(self.as_raw_fd()) != 0}
@@ -75,7 +75,7 @@ pub fn is(stream: Stream) -> bool {
 }
 
 #[cfg(target_os = "hermit")]
-impl<T:std::os::unix::io::AsRawFd> IsATTY for T {
+impl<T:std::os::unix::io::AsRawFd> IsATTY<std::os::unix::io::RawFd> for T {
     fn isatty(&self) -> bool {
         extern crate hermit_abi;
         hermit_abi::isatty(self.as_raw_fd())
@@ -99,7 +99,7 @@ pub fn is(stream: Stream) -> bool {
 }
 
 #[cfg(windows)]
-impl<T:std::os::windows::io::AsRawHandle> IsATTY for T {
+impl<T:std::os::windows::io::AsRawHandle> IsATTY<std::os::windows::io::RawHandle> for T {
     fn isatty(&self) -> bool {
         use winapi::um::processenv::GetStdHandle;
         let handle = self.as_raw_handle() as HANDLE;
@@ -112,7 +112,13 @@ impl<T:std::os::windows::io::AsRawHandle> IsATTY for T {
     }
 }
 
-/// returns true if this is a tty
+#[cfg(windows)]
+impl<T:std::os::windows::io::AsRawSocket> IsATTY<std::os::windows::io::RawSocket> for T {
+    fn isatty(&self) -> bool {
+        false
+    }
+}
+
 #[cfg(windows)]
 pub fn is_handle_a_tty(handle: &HANDLE, others: &[HANDLE]) -> bool {
     if unsafe { console_on(handle) } {
