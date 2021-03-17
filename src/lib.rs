@@ -21,12 +21,11 @@ extern crate libc;
 extern crate winapi;
 
 #[cfg(windows)]
-use winapi::shared::ntdef::{WCHAR, HANDLE};
+use winapi::shared::ntdef::WCHAR;
 #[cfg(windows)]
-use winapi::um::winbase::{
-    STD_ERROR_HANDLE as STD_ERROR, STD_INPUT_HANDLE as STD_INPUT,
-    STD_OUTPUT_HANDLE as STD_OUTPUT,
-};
+use winapi::um::winnt::HANDLE;
+#[cfg(windows)]
+use winapi::um::winbase::{STD_ERROR_HANDLE,STD_INPUT_HANDLE,STD_OUTPUT_HANDLE};
 
 /// possible stream sources
 #[derive(Clone, Copy, Debug)]
@@ -87,9 +86,9 @@ impl<T:std::os::unix::io::AsRawFd> IsATTY<std::os::unix::io::RawFd> for T {
 #[cfg(windows)]
 pub fn is(stream: Stream) -> bool {
     use winapi::um::processenv::GetStdHandle;
-    let stdin = unsafe {GetStdHandle(STD_INPUT) as HANDLE};
-    let stdout = unsafe {GetStdHandle(STD_OUTPUT) as HANDLE};
-    let stderr = unsafe {GetStdHandle(STD_ERROR) as HANDLE};
+    let stdin = unsafe {GetStdHandle(STD_INPUT_HANDLE)};
+    let stdout = unsafe {GetStdHandle(STD_OUTPUT_HANDLE)};
+    let stderr = unsafe {GetStdHandle(STD_ERROR_HANDLE)};
     let (handle, others) = match stream {
         Stream::Stdin => (stdin, [stderr, stdout]),
         Stream::Stderr => (stderr, [stdin, stdout]),
@@ -104,9 +103,9 @@ impl<T:std::os::windows::io::AsRawHandle> IsATTY<std::os::windows::io::RawHandle
     fn isatty(&self) -> bool {
         use winapi::um::processenv::GetStdHandle;
         let handle = self.as_raw_handle() as HANDLE;
-        let stdin = unsafe {GetStdHandle(STD_INPUT) as HANDLE};
-        let stdout = unsafe {GetStdHandle(STD_OUTPUT) as HANDLE};
-        let stderr = unsafe {GetStdHandle(STD_ERROR) as HANDLE};
+        let stdin = unsafe {GetStdHandle(STD_INPUT_HANDLE)};
+        let stdout = unsafe {GetStdHandle(STD_OUTPUT_HANDLE)};
+        let stderr = unsafe {GetStdHandle(STD_ERROR_HANDLE)};
         let others = [stdin, stdout, stderr];
 
         is_handle_a_tty(&handle, &others)
