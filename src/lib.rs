@@ -15,17 +15,17 @@
 //! }
 //! ```
 
-#![cfg_attr(unix, no_std)]
-
 #[cfg(unix)]
 extern crate libc;
 #[cfg(windows)]
 extern crate winapi;
 
 #[cfg(windows)]
-use winapi::shared::minwindef::DWORD;
-#[cfg(windows)]
 use winapi::shared::ntdef::WCHAR;
+#[cfg(windows)]
+use winapi::um::winbase::{STD_ERROR_HANDLE, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE};
+#[cfg(windows)]
+use winapi::um::winnt::HANDLE;
 
 /// possible stream sources
 #[derive(Clone, Copy, Debug)]
@@ -33,6 +33,11 @@ pub enum Stream {
     Stdout,
     Stderr,
     Stdin,
+}
+
+pub trait IsATTY<T> {
+    /// test whether this structure refers to a terminal
+    fn isatty(&self) -> bool;
 }
 
 /// returns true if this is a tty
@@ -48,6 +53,14 @@ pub fn is(stream: Stream) -> bool {
     unsafe { libc::isatty(fd) != 0 }
 }
 
+#[cfg(all(unix, not(target_arch = "wasm32")))]
+impl<T: std::os::unix::io::AsRawFd> IsATTY<std::os::unix::io::RawFd> for T {
+    fn isatty(&self) -> bool {
+        extern crate libc;
+        unsafe { libc::isatty(self.as_raw_fd()) != 0 }
+    }
+}
+
 /// returns true if this is a tty
 #[cfg(target_os = "hermit")]
 pub fn is(stream: Stream) -> bool {
@@ -61,20 +74,54 @@ pub fn is(stream: Stream) -> bool {
     hermit_abi::isatty(fd)
 }
 
+#[cfg(target_os = "hermit")]
+impl<T: std::os::unix::io::AsRawFd> IsATTY<std::os::unix::io::RawFd> for T {
+    fn isatty(&self) -> bool {
+        extern crate hermit_abi;
+        hermit_abi::isatty(self.as_raw_fd())
+    }
+}
+
 /// returns true if this is a tty
 #[cfg(windows)]
 pub fn is(stream: Stream) -> bool {
-    use winapi::um::winbase::{
-        STD_ERROR_HANDLE as STD_ERROR, STD_INPUT_HANDLE as STD_INPUT,
-        STD_OUTPUT_HANDLE as STD_OUTPUT,
+    use winapi::um::processenv::GetStdHandle;
+    let stdin = unsafe { GetStdHandle(STD_INPUT_HANDLE) };
+    let stdout = unsafe { GetStdHandle(STD_OUTPUT_HANDLE) };
+    let stderr = unsafe { GetStdHandle(STD_ERROR_HANDLE) };
+    let (handle, others) = match stream {
+        Stream::Stdin => (stdin, [stderr, stdout]),
+        Stream::Stderr => (stderr, [stdin, stdout]),
+        Stream::Stdout => (stdout, [stdin, stderr]),
     };
 
-    let (fd, others) = match stream {
-        Stream::Stdin => (STD_INPUT, [STD_ERROR, STD_OUTPUT]),
-        Stream::Stderr => (STD_ERROR, [STD_INPUT, STD_OUTPUT]),
-        Stream::Stdout => (STD_OUTPUT, [STD_INPUT, STD_ERROR]),
-    };
-    if unsafe { console_on_any(&[fd]) } {
+    is_handle_a_tty(&handle, &others)
+}
+
+#[cfg(windows)]
+impl<T: std::os::windows::io::AsRawHandle> IsATTY<std::os::windows::io::RawHandle> for T {
+    fn isatty(&self) -> bool {
+        use winapi::um::processenv::GetStdHandle;
+        let handle = self.as_raw_handle() as HANDLE;
+        let stdin = unsafe { GetStdHandle(STD_INPUT_HANDLE) };
+        let stdout = unsafe { GetStdHandle(STD_OUTPUT_HANDLE) };
+        let stderr = unsafe { GetStdHandle(STD_ERROR_HANDLE) };
+        let others = [stdin, stdout, stderr];
+
+        is_handle_a_tty(&handle, &others)
+    }
+}
+
+#[cfg(windows)]
+impl<T: std::os::windows::io::AsRawSocket> IsATTY<std::os::windows::io::RawSocket> for T {
+    fn isatty(&self) -> bool {
+        false
+    }
+}
+
+#[cfg(windows)]
+pub fn is_handle_a_tty(handle: &HANDLE, others: &[HANDLE]) -> bool {
+    if unsafe { console_on(handle) } {
         // False positives aren't possible. If we got a console then
         // we definitely have a tty on stdin.
         return true;
@@ -84,13 +131,15 @@ pub fn is(stream: Stream) -> bool {
     // this is true negative if we can detect the presence of a console on
     // any of the other streams. If another stream has a console, then we know
     // we're in a Windows console and can therefore trust the negative.
-    if unsafe { console_on_any(&others) } {
-        return false;
+    for h in others {
+        if unsafe { console_on(h) } {
+            return false;
+        }
     }
 
     // Otherwise, we fall back to a very strange msys hack to see if we can
     // sneakily detect the presence of a tty.
-    unsafe { msys_tty_on(fd) }
+    unsafe { msys_tty_on(handle) }
 }
 
 /// returns true if this is _not_ a tty
@@ -100,29 +149,26 @@ pub fn isnt(stream: Stream) -> bool {
 
 /// Returns true if any of the given fds are on a console.
 #[cfg(windows)]
-unsafe fn console_on_any(fds: &[DWORD]) -> bool {
-    use winapi::um::{consoleapi::GetConsoleMode, processenv::GetStdHandle};
+unsafe fn console_on(handle: &HANDLE) -> bool {
+    use winapi::um::consoleapi::GetConsoleMode;
 
-    for &fd in fds {
-        let mut out = 0;
-        let handle = GetStdHandle(fd);
-        if GetConsoleMode(handle, &mut out) != 0 {
-            return true;
-        }
+    let mut out = 0;
+    if GetConsoleMode(*handle, &mut out) != 0 {
+        return true;
     }
     false
 }
 
 /// Returns true if there is an MSYS tty on the given handle.
 #[cfg(windows)]
-unsafe fn msys_tty_on(fd: DWORD) -> bool {
+unsafe fn msys_tty_on(handle: &HANDLE) -> bool {
     use std::{mem, slice};
 
     use winapi::{
         ctypes::c_void,
         shared::minwindef::MAX_PATH,
         um::{
-            fileapi::FILE_NAME_INFO, minwinbase::FileNameInfo, processenv::GetStdHandle,
+            fileapi::FILE_NAME_INFO, minwinbase::FileNameInfo,
             winbase::GetFileInformationByHandleEx,
         },
     };
@@ -130,7 +176,7 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
     let size = mem::size_of::<FILE_NAME_INFO>();
     let mut name_info_bytes = vec![0u8; size + MAX_PATH * mem::size_of::<WCHAR>()];
     let res = GetFileInformationByHandleEx(
-        GetStdHandle(fd),
+        *handle,
         FileNameInfo,
         &mut *name_info_bytes as *mut _ as *mut c_void,
         name_info_bytes.len() as u32,
@@ -159,52 +205,66 @@ pub fn is(_stream: Stream) -> bool {
     false
 }
 
+#[cfg(target_arch = "wasm32")]
+impl<T: std::os::unix::io::AsRawFd> IsATTY for T {
+    fn isatty(&self) -> bool {
+        false
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{is, Stream};
+    use super::{is, IsATTY, Stream};
 
     #[test]
     #[cfg(windows)]
     fn is_err() {
         // appveyor pipes its output
-        assert!(!is(Stream::Stderr))
+        assert!(!is(Stream::Stderr));
+        assert!(!std::io::stderr().isatty());
     }
 
     #[test]
     #[cfg(windows)]
     fn is_out() {
         // appveyor pipes its output
-        assert!(!is(Stream::Stdout))
+        assert!(!is(Stream::Stdout));
+        assert!(!std::io::stdout().isatty());
     }
 
     #[test]
     #[cfg(windows)]
     fn is_in() {
-        assert!(is(Stream::Stdin))
+        assert!(is(Stream::Stdin));
+        assert!(std::io::stdin().isatty());
     }
 
     #[test]
     #[cfg(unix)]
     fn is_err() {
-        assert!(is(Stream::Stderr))
+        assert!(is(Stream::Stderr));
+        assert!(std::io::stderr().isatty());
     }
 
     #[test]
     #[cfg(unix)]
     fn is_out() {
-        assert!(is(Stream::Stdout))
+        assert!(is(Stream::Stdout));
+        assert!(std::io::stdout().isatty());
     }
 
     #[test]
     #[cfg(target_os = "macos")]
     fn is_in() {
         // macos on travis seems to pipe its input
-        assert!(is(Stream::Stdin))
+        assert!(is(Stream::Stdin));
+        assert!(std::io::stdin().isatty());
     }
 
     #[test]
     #[cfg(all(not(target_os = "macos"), unix))]
     fn is_in() {
-        assert!(is(Stream::Stdin))
+        assert!(is(Stream::Stdin));
+        assert!(std::io::stdin().isatty());
     }
 }
