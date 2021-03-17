@@ -21,9 +21,12 @@ extern crate libc;
 extern crate winapi;
 
 #[cfg(windows)]
-use winapi::shared::minwindef::DWORD;
+use winapi::shared::ntdef::{WCHAR, HANDLE};
 #[cfg(windows)]
-use winapi::shared::ntdef::WCHAR;
+use winapi::um::winbase::{
+    STD_ERROR_HANDLE as STD_ERROR, STD_INPUT_HANDLE as STD_INPUT,
+    STD_OUTPUT_HANDLE as STD_OUTPUT,
+};
 
 /// possible stream sources
 #[derive(Clone, Copy, Debug)]
@@ -82,17 +85,37 @@ impl<T:std::os::unix::io::AsRawFd> IsATTY for T {
 /// returns true if this is a tty
 #[cfg(windows)]
 pub fn is(stream: Stream) -> bool {
-    use winapi::um::winbase::{
-        STD_ERROR_HANDLE as STD_ERROR, STD_INPUT_HANDLE as STD_INPUT,
-        STD_OUTPUT_HANDLE as STD_OUTPUT,
+    use winapi::um::processenv::GetStdHandle;
+    let stdin = unsafe {GetStdHandle(STD_INPUT) as HANDLE};
+    let stdout = unsafe {GetStdHandle(STD_OUTPUT) as HANDLE};
+    let stderr = unsafe {GetStdHandle(STD_ERROR) as HANDLE};
+    let (handle, others) = match stream {
+        Stream::Stdin => (stdin, [stderr, stdout]),
+        Stream::Stderr => (stderr, [stdin, stdout]),
+        Stream::Stdout => (stdout, [stdin, stderr]),
     };
+    
+    is_handle_a_tty(&handle, &others)
+}
 
-    let (fd, others) = match stream {
-        Stream::Stdin => (STD_INPUT, [STD_ERROR, STD_OUTPUT]),
-        Stream::Stderr => (STD_ERROR, [STD_INPUT, STD_OUTPUT]),
-        Stream::Stdout => (STD_OUTPUT, [STD_INPUT, STD_ERROR]),
-    };
-    if unsafe { console_on_any(&[fd]) } {
+#[cfg(windows)]
+impl<T:std::os::windows::io::AsRawHandle> IsATTY for T {
+    fn isatty(&self) -> bool {
+        use winapi::um::processenv::GetStdHandle;
+        let handle = self.as_raw_handle() as HANDLE;
+        let stdin = unsafe {GetStdHandle(STD_INPUT) as HANDLE};
+        let stdout = unsafe {GetStdHandle(STD_OUTPUT) as HANDLE};
+        let stderr = unsafe {GetStdHandle(STD_ERROR) as HANDLE};
+        let others = [stdin, stdout, stderr];
+
+        is_handle_a_tty(&handle, &others)
+    }
+}
+
+/// returns true if this is a tty
+#[cfg(windows)]
+pub fn is_handle_a_tty(handle: &HANDLE, others: &[HANDLE]) -> bool {
+    if unsafe { console_on(handle) } {
         // False positives aren't possible. If we got a console then
         // we definitely have a tty on stdin.
         return true;
@@ -102,13 +125,15 @@ pub fn is(stream: Stream) -> bool {
     // this is true negative if we can detect the presence of a console on
     // any of the other streams. If another stream has a console, then we know
     // we're in a Windows console and can therefore trust the negative.
-    if unsafe { console_on_any(&others) } {
-        return false;
+    for h in others {
+        if unsafe { console_on(h) } {
+            return false;
+        }
     }
 
     // Otherwise, we fall back to a very strange msys hack to see if we can
     // sneakily detect the presence of a tty.
-    unsafe { msys_tty_on(fd) }
+    unsafe { msys_tty_on(handle) }
 }
 
 /// returns true if this is _not_ a tty
@@ -118,29 +143,26 @@ pub fn isnt(stream: Stream) -> bool {
 
 /// Returns true if any of the given fds are on a console.
 #[cfg(windows)]
-unsafe fn console_on_any(fds: &[DWORD]) -> bool {
-    use winapi::um::{consoleapi::GetConsoleMode, processenv::GetStdHandle};
+unsafe fn console_on(handle: &HANDLE) -> bool {
+    use winapi::um::{consoleapi::GetConsoleMode};
 
-    for &fd in fds {
-        let mut out = 0;
-        let handle = GetStdHandle(fd);
-        if GetConsoleMode(handle, &mut out) != 0 {
-            return true;
-        }
+    let mut out = 0;
+    if GetConsoleMode(*handle, &mut out) != 0 {
+        return true;
     }
     false
 }
 
 /// Returns true if there is an MSYS tty on the given handle.
 #[cfg(windows)]
-unsafe fn msys_tty_on(fd: DWORD) -> bool {
+unsafe fn msys_tty_on(handle: &HANDLE) -> bool {
     use std::{mem, slice};
 
     use winapi::{
         ctypes::c_void,
         shared::minwindef::MAX_PATH,
         um::{
-            fileapi::FILE_NAME_INFO, minwinbase::FileNameInfo, processenv::GetStdHandle,
+            fileapi::FILE_NAME_INFO, minwinbase::FileNameInfo,
             winbase::GetFileInformationByHandleEx,
         },
     };
@@ -148,7 +170,7 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
     let size = mem::size_of::<FILE_NAME_INFO>();
     let mut name_info_bytes = vec![0u8; size + MAX_PATH * mem::size_of::<WCHAR>()];
     let res = GetFileInformationByHandleEx(
-        GetStdHandle(fd),
+        *handle,
         FileNameInfo,
         &mut *name_info_bytes as *mut _ as *mut c_void,
         name_info_bytes.len() as u32,
