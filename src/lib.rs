@@ -37,6 +37,7 @@ pub enum Stream {
 }
 
 pub trait IsATTY<T> {
+    /// test whether this structure refers to a terminal
     fn isatty(&self) -> bool;
 }
 
@@ -214,50 +215,57 @@ impl<T:std::os::unix::io::AsRawFd> IsATTY for T {
 
 #[cfg(test)]
 mod tests {
-    use super::{is, Stream};
+    use super::{is, Stream, IsATTY};
 
     #[test]
     #[cfg(windows)]
     fn is_err() {
         // appveyor pipes its output
-        assert!(!is(Stream::Stderr))
+        assert!(!is(Stream::Stderr));
+        assert!(!std::io::stderr().isatty());
     }
 
     #[test]
     #[cfg(windows)]
     fn is_out() {
         // appveyor pipes its output
-        assert!(!is(Stream::Stdout))
+        assert!(!is(Stream::Stdout));
+        assert!(!std::io::stdout().isatty());
     }
 
     #[test]
     #[cfg(windows)]
     fn is_in() {
-        assert!(is(Stream::Stdin))
+        assert!(is(Stream::Stdin));
+        assert!(std::io::stdin().isatty());
     }
 
     #[test]
     #[cfg(unix)]
     fn is_err() {
-        assert!(is(Stream::Stderr))
+        assert!(is(Stream::Stderr));
+        assert!(std::io::stderr().isatty());
     }
 
     #[test]
     #[cfg(unix)]
     fn is_out() {
-        assert!(is(Stream::Stdout))
+        assert!(is(Stream::Stdout));
+        assert!(std::io::stdout().isatty());
     }
 
     #[test]
     #[cfg(target_os = "macos")]
     fn is_in() {
         // macos on travis seems to pipe its input
-        assert!(is(Stream::Stdin))
+        assert!(is(Stream::Stdin));
+        assert!(std::io::stdin().isatty());
     }
 
     #[test]
     #[cfg(all(not(target_os = "macos"), unix))]
     fn is_in() {
-        assert!(is(Stream::Stdin))
+        assert!(is(Stream::Stdin));
+        assert!(std::io::stdin().isatty());
     }
 }
