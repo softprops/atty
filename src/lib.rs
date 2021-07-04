@@ -90,7 +90,7 @@ pub fn is(stream: Stream) -> bool {
 
     // Otherwise, we fall back to a very strange msys hack to see if we can
     // sneakily detect the presence of a tty.
-    unsafe { msys_tty_on(fd) }
+    msys_tty_on(fd)
 }
 
 /// returns true if this is _not_ a tty
@@ -158,10 +158,13 @@ fn msys_tty_on(fd: DWORD) -> bool {
         //         Note name_info.FileName is only partially initialized
         &*name_info.as_ptr()
     };
-    let s = slice::from_raw_parts(
-        name_info.FileName.as_ptr() as *const WCHAR,
-        name_info.FileNameLength as usize / 2,
-    );
+    let s = unsafe {
+        // Safety: the buffer is guaranteed to have FileNameLength initialized bytes
+        slice::from_raw_parts(
+            name_info.FileName.as_ptr() as *const WCHAR,
+            name_info.FileNameLength as usize / 2,
+        )
+    };
     let name = String::from_utf16_lossy(s);
     // This checks whether 'pty' exists in the file name, which indicates that
     // a pseudo-terminal is attached. To mitigate against false positives
