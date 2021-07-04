@@ -146,8 +146,8 @@ fn msys_tty_on(fd: DWORD) -> bool {
         GetFileInformationByHandleEx(
             handle,
             FileNameInfo,
-            name_info_bytes.as_mut_ptr() as *mut c_void,
-            mem::size_of_val(&name_info_bytes) as u32,
+            name_info.as_mut_ptr() as *mut c_void,
+            mem::size_of_val(&name_info) as u32,
         )
     };
     if res == 0 {
@@ -156,7 +156,7 @@ fn msys_tty_on(fd: DWORD) -> bool {
     let name_info = unsafe {
         // Safety: The API call succeeded, so name_info has been initialized
         //         Note name_info.FileName is only partially initialized
-        &*name_info_bytes.as_ptr()
+        &*name_info.as_ptr()
     };
     let s = slice::from_raw_parts(
         name_info.FileName.as_ptr() as *const WCHAR,
