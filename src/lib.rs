@@ -115,32 +115,51 @@ unsafe fn console_on_any(fds: &[DWORD]) -> bool {
 
 /// Returns true if there is an MSYS tty on the given handle.
 #[cfg(windows)]
-unsafe fn msys_tty_on(fd: DWORD) -> bool {
+fn msys_tty_on(fd: DWORD) -> bool {
     use std::{mem, slice};
 
     use winapi::{
         ctypes::c_void,
         shared::minwindef::MAX_PATH,
         um::{
-            fileapi::FILE_NAME_INFO, minwinbase::FileNameInfo, processenv::GetStdHandle,
+            minwinbase::FileNameInfo, processenv::GetStdHandle,
             winbase::GetFileInformationByHandleEx,
         },
     };
 
-    let size = mem::size_of::<FILE_NAME_INFO>();
-    let mut name_info_bytes = vec![0u8; size + MAX_PATH * mem::size_of::<WCHAR>()];
-    let res = GetFileInformationByHandleEx(
-        GetStdHandle(fd),
-        FileNameInfo,
-        &mut *name_info_bytes as *mut _ as *mut c_void,
-        name_info_bytes.len() as u32,
-    );
+    /// Mirrors winapi::um::fileapi::FILE_NAME_INFO, giving it a fixed length that
+    /// we can stack allocate
+    #[repr(C)]
+    struct FILE_NAME_INFO {
+        FileNameLength: DWORD,
+        FileName: [mem::MaybeUninit<WCHAR>; MAX_PATH]
+    }
+    let mut name_info = mem::MaybeUninit::<FILE_NAME_INFO>::uninit();
+    let handle = unsafe {
+        // Safety: function has no invariants. an invalid handle id will cause
+        //         GetFileInformationByHandleEx to return an error
+        GetStdHandle(fd)
+    };
+    let res = unsafe {
+        // Safety: handle is valid, buffer is large enough for expected data
+        //         and we have fully allocated it.
+        GetFileInformationByHandleEx(
+            handle,
+            FileNameInfo,
+            name_info_bytes.as_mut_ptr() as *mut c_void,
+            mem::size_of_val(&name_info_bytes) as u32,
+        )
+    };
     if res == 0 {
         return false;
     }
-    let name_info: &FILE_NAME_INFO = &*(name_info_bytes.as_ptr() as *const FILE_NAME_INFO);
+    let name_info = unsafe {
+        // Safety: The API call succeeded, so name_info has been initialized
+        //         Note name_info.FileName is only partially initialized
+        &*name_info_bytes.as_ptr()
+    };
     let s = slice::from_raw_parts(
-        name_info.FileName.as_ptr(),
+        name_info.FileName.as_ptr() as *const WCHAR,
         name_info.FileNameLength as usize / 2,
     );
     let name = String::from_utf16_lossy(s);
