@@ -116,8 +116,6 @@ unsafe fn console_on_any(fds: &[DWORD]) -> bool {
 /// Returns true if there is an MSYS tty on the given handle.
 #[cfg(windows)]
 fn msys_tty_on(fd: DWORD) -> bool {
-    use std::{mem, slice};
-
     use winapi::{
         ctypes::c_void,
         shared::minwindef::MAX_PATH,
@@ -149,13 +147,13 @@ fn msys_tty_on(fd: DWORD) -> bool {
             handle,
             FileNameInfo,
             &mut name_info as *mut _ as *mut c_void,
-            mem::size_of::<FILE_NAME_INFO>() as u32,
+            std::mem::size_of::<FILE_NAME_INFO>() as u32,
         )
     };
     if res == 0 {
         return false;
     }
-    let s = &name_info.FileName[..name_info.FileNameLength];
+    let s = &name_info.FileName[..name_info.FileNameLength as usize];
     let name = String::from_utf16_lossy(s);
     // This checks whether 'pty' exists in the file name, which indicates that
     // a pseudo-terminal is attached. To mitigate against false positives
