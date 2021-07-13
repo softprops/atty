@@ -132,39 +132,30 @@ fn msys_tty_on(fd: DWORD) -> bool {
     #[repr(C)]
     struct FILE_NAME_INFO {
         FileNameLength: DWORD,
-        FileName: [mem::MaybeUninit<WCHAR>; MAX_PATH]
+        FileName: [WCHAR; MAX_PATH]
     }
-    let mut name_info = mem::MaybeUninit::<FILE_NAME_INFO>::uninit();
+    let mut name_info = FILE_NAME_INFO {
+        FileNameLength: 0,
+        FileName: [0; MAX_PATH]
+    };
     let handle = unsafe {
         // Safety: function has no invariants. an invalid handle id will cause
         //         GetFileInformationByHandleEx to return an error
         GetStdHandle(fd)
     };
     let res = unsafe {
-        // Safety: handle is valid, buffer is large enough for expected data
-        //         and we have fully allocated it.
+        // Safety: handle is valid, and buffer length is fixed
         GetFileInformationByHandleEx(
             handle,
             FileNameInfo,
-            name_info.as_mut_ptr() as *mut c_void,
-            mem::size_of_val(&name_info) as u32,
+            &mut name_info,
+            mem::size_of::<FILE_NAME_INFO>() as u32,
         )
     };
     if res == 0 {
         return false;
     }
-    let name_info = unsafe {
-        // Safety: The API call succeeded, so name_info has been initialized
-        //         Note name_info.FileName is only partially initialized
-        &*name_info.as_ptr()
-    };
-    let s = unsafe {
-        // Safety: the buffer is guaranteed to have FileNameLength initialized bytes
-        slice::from_raw_parts(
-            name_info.FileName.as_ptr() as *const WCHAR,
-            name_info.FileNameLength as usize / 2,
-        )
-    };
+    let s = &name_info.FileName[..name_info.FileNameLength];
     let name = String::from_utf16_lossy(s);
     // This checks whether 'pty' exists in the file name, which indicates that
     // a pseudo-terminal is attached. To mitigate against false positives
