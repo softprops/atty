@@ -148,7 +148,7 @@ fn msys_tty_on(fd: DWORD) -> bool {
         GetFileInformationByHandleEx(
             handle,
             FileNameInfo,
-            &mut name_info,
+            &mut name_info as *mut _ as *mut c_void,
             mem::size_of::<FILE_NAME_INFO>() as u32,
         )
     };
