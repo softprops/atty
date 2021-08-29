@@ -90,7 +90,7 @@ pub fn is(stream: Stream) -> bool {
 
     // Otherwise, we fall back to a very strange msys hack to see if we can
     // sneakily detect the presence of a tty.
-    unsafe { msys_tty_on(fd) }
+    msys_tty_on(fd)
 }
 
 /// returns true if this is _not_ a tty
@@ -115,34 +115,45 @@ unsafe fn console_on_any(fds: &[DWORD]) -> bool {
 
 /// Returns true if there is an MSYS tty on the given handle.
 #[cfg(windows)]
-unsafe fn msys_tty_on(fd: DWORD) -> bool {
-    use std::{mem, slice};
-
+fn msys_tty_on(fd: DWORD) -> bool {
     use winapi::{
         ctypes::c_void,
         shared::minwindef::MAX_PATH,
         um::{
-            fileapi::FILE_NAME_INFO, minwinbase::FileNameInfo, processenv::GetStdHandle,
+            minwinbase::FileNameInfo, processenv::GetStdHandle,
             winbase::GetFileInformationByHandleEx,
         },
     };
 
-    let size = mem::size_of::<FILE_NAME_INFO>();
-    let mut name_info_bytes = vec![0u8; size + MAX_PATH * mem::size_of::<WCHAR>()];
-    let res = GetFileInformationByHandleEx(
-        GetStdHandle(fd),
-        FileNameInfo,
-        &mut *name_info_bytes as *mut _ as *mut c_void,
-        name_info_bytes.len() as u32,
-    );
+    /// Mirrors winapi::um::fileapi::FILE_NAME_INFO, giving it a fixed length that
+    /// we can stack allocate
+    #[repr(C)]
+    struct FILE_NAME_INFO {
+        FileNameLength: DWORD,
+        FileName: [WCHAR; MAX_PATH]
+    }
+    let mut name_info = FILE_NAME_INFO {
+        FileNameLength: 0,
+        FileName: [0; MAX_PATH]
+    };
+    let handle = unsafe {
+        // Safety: function has no invariants. an invalid handle id will cause
+        //         GetFileInformationByHandleEx to return an error
+        GetStdHandle(fd)
+    };
+    let res = unsafe {
+        // Safety: handle is valid, and buffer length is fixed
+        GetFileInformationByHandleEx(
+            handle,
+            FileNameInfo,
+            &mut name_info as *mut _ as *mut c_void,
+            std::mem::size_of::<FILE_NAME_INFO>() as u32,
+        )
+    };
     if res == 0 {
         return false;
     }
-    let name_info: &FILE_NAME_INFO = &*(name_info_bytes.as_ptr() as *const FILE_NAME_INFO);
-    let s = slice::from_raw_parts(
-        name_info.FileName.as_ptr(),
-        name_info.FileNameLength as usize / 2,
-    );
+    let s = &name_info.FileName[..name_info.FileNameLength as usize];
     let name = String::from_utf16_lossy(s);
     // This checks whether 'pty' exists in the file name, which indicates that
     // a pseudo-terminal is attached. To mitigate against false positives
