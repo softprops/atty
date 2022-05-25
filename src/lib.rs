@@ -154,7 +154,7 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
 }
 
 /// returns true if this is a tty
-#[cfg(any(target_arch = "wasm32", target_env = "sgx"))]
+#[cfg(any(target_arch = "wasm32", target_env = "sgx", target_os = "solid_asp3"))]
 pub fn is(_stream: Stream) -> bool {
     false
 }
