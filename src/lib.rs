@@ -36,7 +36,7 @@ pub enum Stream {
 }
 
 /// returns true if this is a tty
-#[cfg(all(unix, not(target_arch = "wasm32")))]
+#[cfg(all(unix, not(any(target_arch = "wasm32", target_arch = "wasm64"))))]
 pub fn is(stream: Stream) -> bool {
     extern crate libc;
 
@@ -154,7 +154,11 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
 }
 
 /// returns true if this is a tty
-#[cfg(any(target_arch = "wasm32", target_env = "sgx"))]
+#[cfg(not(any(
+    all(unix, not(any(target_arch = "wasm32", target_arch = "wasm64"))),
+    target_os = "hermit",
+    windows
+)))]
 pub fn is(_stream: Stream) -> bool {
     false
 }
