@@ -122,15 +122,24 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
         ctypes::c_void,
         shared::minwindef::MAX_PATH,
         um::{
-            fileapi::FILE_NAME_INFO, minwinbase::FileNameInfo, processenv::GetStdHandle,
-            winbase::GetFileInformationByHandleEx,
+            fileapi::{GetFileType, FILE_NAME_INFO},
+            minwinbase::FileNameInfo,
+            processenv::GetStdHandle,
+            winbase::{GetFileInformationByHandleEx, FILE_TYPE_PIPE},
         },
     };
+
+    let handle = GetStdHandle(fd);
+
+    // Early return if the handle is not a pipe.
+    if GetFileType(handle) != FILE_TYPE_PIPE {
+        return false;
+    }
 
     let size = mem::size_of::<FILE_NAME_INFO>();
     let mut name_info_bytes = vec![0u8; size + MAX_PATH * mem::size_of::<WCHAR>()];
     let res = GetFileInformationByHandleEx(
-        GetStdHandle(fd),
+        handle,
         FileNameInfo,
         &mut *name_info_bytes as *mut _ as *mut c_void,
         name_info_bytes.len() as u32,
@@ -144,11 +153,13 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
         name_info.FileNameLength as usize / 2,
     );
     let name = String::from_utf16_lossy(s);
+    // Get the file name only.
+    let name = name.rsplit('\\').next().unwrap_or(&name);
     // This checks whether 'pty' exists in the file name, which indicates that
     // a pseudo-terminal is attached. To mitigate against false positives
     // (e.g., an actual file name that contains 'pty'), we also require that
-    // either the strings 'msys-' or 'cygwin-' are in the file name as well.)
-    let is_msys = name.contains("msys-") || name.contains("cygwin-");
+    // the file name begins with either the strings 'msys-' or 'cygwin-'.)
+    let is_msys = name.starts_with("msys-") || name.starts_with("cygwin-");
     let is_pty = name.contains("-pty");
     is_msys && is_pty
 }
