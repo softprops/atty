@@ -18,7 +18,7 @@ travis-ci = { repository = "softprops/atty" }
 libc = { version = "0.2", default-features = false }
 
 [target.'cfg(target_os = "hermit")'.dependencies]
-hermit-abi = "0.1.6"
+hermit-abi = "0.3"
 
 [target.'cfg(windows)'.dependencies.winapi]
 version = "0.3"
