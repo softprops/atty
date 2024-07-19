@@ -20,7 +20,7 @@ libc = { version = "0.2", default-features = false }
 [target.'cfg(target_os = "hermit")'.dependencies]
 hermit-abi = "0.1.6"
 
-[target.'cfg(windows)'.dependencies.winapi]
-version = "0.3"
-features = ["consoleapi", "processenv", "minwinbase", "minwindef", "winbase"]
+[target.'cfg(windows)'.dependencies.windows-sys]
+version = "0.42"
+features = ["Win32_System_Console", "Win32_Foundation", "Win32_Storage_FileSystem"]
 
